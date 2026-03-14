@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Our Love ❤️</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#ff9a9e,#fad0c4);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:white;
+    overflow:hidden;
+}
+
+.card{
+    background: rgba(255,255,255,0.2);
+    padding:40px;
+    border-radius:20px;
+    backdrop-filter: blur(10px);
+    width:350px;
+    position:relative;
+    z-index:10;
+}
+
+#counter{
+    font-size:20px;
+    margin:20px 0;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+/* floating hearts */
+
+.heart{
+    position: absolute;
+    bottom:-20px;
+    font-size:20px;
+    animation: floatUp linear infinite;
+}
+
+@keyframes floatUp{
+    from{
+        transform: translateY(0);
+        opacity:1;
+    }
+    to{
+        transform: translateY(-110vh);
+        opacity:0;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h1>Hi My Love ❤️</h1>
+
+<p>We've been together for:</p>
+
+<div id="counter"></div>
+
+<button onclick="showMessage()">Click for a surprise 💌</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script>
+
+// counter
+const startDate = new Date("2025-12-30T00:00:00");
+
+function updateCounter(){
+    const now = new Date();
+    const diff = now - startDate;
+
+    const seconds = Math.floor(diff/1000) % 60;
+    const minutes = Math.floor(diff/1000/60) % 60;
+    const hours = Math.floor(diff/1000/60/60) % 24;
+    const days = Math.floor(diff/1000/60/60/24);
+
+    document.getElementById("counter").innerHTML =
+        days+" days "+
+        hours+" hours "+
+        minutes+" minutes "+
+        seconds+" seconds ❤️";
+}
+
+setInterval(updateCounter,1000);
+updateCounter();
+
+function showMessage(){
+document.getElementById("msg").innerHTML =
+"Meeting you on Dec 30, 2025 was the best day of my life 💕";
+}
+
+// hearts animation
+function createHeart(){
+
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+
+    heart.innerHTML="❤️";
+
+    heart.style.left = Math.random()*100 + "vw";
+    heart.style.animationDuration = (3 + Math.random()*5) + "s";
+    heart.style.fontSize = (15 + Math.random()*30) + "px";
+
+    document.body.appendChild(heart);
+
+    setTimeout(()=>{
+        heart.remove();
+    },8000);
+
+}
+
+setInterval(createHeart,300);
+
+</script>
+
+</body>
+</html>
