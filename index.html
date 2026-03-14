@@ -2,64 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Our Love ❤️</title>
+<title>For My Love ❤️</title>
 
 <style>
 
 body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg,#ff9a9e,#fad0c4);
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-    color:white;
-    overflow:hidden;
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+color:white;
+overflow:hidden;
 }
 
 .card{
-    background: rgba(255,255,255,0.2);
-    padding:40px;
-    border-radius:20px;
-    backdrop-filter: blur(10px);
-    width:350px;
-    position:relative;
-    z-index:10;
+background:rgba(255,255,255,0.2);
+padding:40px;
+border-radius:20px;
+backdrop-filter:blur(10px);
+width:380px;
+z-index:10;
 }
 
 #counter{
-    font-size:20px;
-    margin:20px 0;
+font-size:20px;
+margin:20px 0;
 }
 
 button{
-    padding:12px 20px;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    cursor:pointer;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
 }
 
-/* floating hearts */
+/* hearts */
 
 .heart{
-    position: absolute;
-    bottom:-20px;
-    font-size:20px;
-    animation: floatUp linear infinite;
+position:absolute;
+bottom:-20px;
+animation:floatUp linear infinite;
 }
 
 @keyframes floatUp{
-    from{
-        transform: translateY(0);
-        opacity:1;
-    }
-    to{
-        transform: translateY(-110vh);
-        opacity:0;
-    }
+from{transform:translateY(0);opacity:1;}
+to{transform:translateY(-110vh);opacity:0;}
+}
+
+/* photo */
+
+.photo{
+width:100%;
+border-radius:15px;
+margin-top:15px;
 }
 
 </style>
@@ -68,68 +68,115 @@ button{
 <body>
 
 <div class="card">
+
 <h1>Hi My Love ❤️</h1>
 
-<p>We've been together for:</p>
+<p>Since we met on <b>30 Dec 2025</b></p>
 
 <div id="counter"></div>
 
-<button onclick="showMessage()">Click for a surprise 💌</button>
+<button onclick="showMessage()">Love message 💌</button>
 
 <p id="msg"></p>
 
+<img src="photo.jpg" class="photo">
+
+<p>Our song ❤️</p>
+
+<iframe style="border-radius:12px"
+src="https://open.spotify.com/embed/track/0tgVpDi06FyKpA1z0VMD4v"
+width="100%"
+height="80"
+frameBorder="0"
+allowfullscreen=""
+allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+</iframe>
 </div>
 
 <script>
 
-// counter
+/* counter */
+
 const startDate = new Date("2025-12-30T00:00:00");
 
 function updateCounter(){
-    const now = new Date();
-    const diff = now - startDate;
 
-    const seconds = Math.floor(diff/1000) % 60;
-    const minutes = Math.floor(diff/1000/60) % 60;
-    const hours = Math.floor(diff/1000/60/60) % 24;
-    const days = Math.floor(diff/1000/60/60/24);
+const now = new Date();
+const diff = now - startDate;
 
-    document.getElementById("counter").innerHTML =
-        days+" days "+
-        hours+" hours "+
-        minutes+" minutes "+
-        seconds+" seconds ❤️";
+const seconds = Math.floor(diff/1000)%60;
+const minutes = Math.floor(diff/1000/60)%60;
+const hours = Math.floor(diff/1000/60/60)%24;
+const days = Math.floor(diff/1000/60/60/24);
+
+document.getElementById("counter").innerHTML =
+days+" days "+
+hours+" hours "+
+minutes+" minutes "+
+seconds+" seconds ❤️";
+
 }
 
 setInterval(updateCounter,1000);
 updateCounter();
 
+/* messages */
+
+const messages=[
+"You are my favorite person ❤️",
+"I’m so lucky to have you 💕",
+"Every moment with you is special ✨",
+"I love you more every day 💖",
+"You make my life beautiful 🌸"
+];
+
 function showMessage(){
-document.getElementById("msg").innerHTML =
-"Meeting you on Dec 30, 2025 was the best day of my life 💕";
+
+const msg=messages[Math.floor(Math.random()*messages.length)];
+
+document.getElementById("msg").innerHTML=msg;
+
 }
 
-// hearts animation
+/* floating hearts */
+
 function createHeart(){
 
-    const heart = document.createElement("div");
-    heart.classList.add("heart");
+const heart=document.createElement("div");
 
-    heart.innerHTML="❤️";
+heart.className="heart";
+heart.innerHTML="❤️";
 
-    heart.style.left = Math.random()*100 + "vw";
-    heart.style.animationDuration = (3 + Math.random()*5) + "s";
-    heart.style.fontSize = (15 + Math.random()*30) + "px";
+heart.style.left=Math.random()*100+"vw";
+heart.style.fontSize=(15+Math.random()*30)+"px";
+heart.style.animationDuration=(3+Math.random()*5)+"s";
 
-    document.body.appendChild(heart);
+document.body.appendChild(heart);
 
-    setTimeout(()=>{
-        heart.remove();
-    },8000);
+setTimeout(()=>{
+heart.remove();
+},8000);
 
 }
 
 setInterval(createHeart,300);
+
+/* click hearts */
+
+document.addEventListener("click",(e)=>{
+
+const heart=document.createElement("div");
+heart.innerHTML="💖";
+heart.style.position="absolute";
+heart.style.left=e.clientX+"px";
+heart.style.top=e.clientY+"px";
+heart.style.fontSize="30px";
+
+document.body.appendChild(heart);
+
+setTimeout(()=>heart.remove(),1000);
+
+});
 
 </script>
 
