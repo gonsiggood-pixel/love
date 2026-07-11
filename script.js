@@ -35,12 +35,14 @@ document.getElementById("msg").innerHTML=msg;
 
 /* floating hearts */
 
+const heartGlyphs=["❤️","💕","💖","💗","🌸"];
+
 function createHeart(){
 
 const heart=document.createElement("div");
 
 heart.className="heart";
-heart.innerHTML="❤️";
+heart.innerHTML=heartGlyphs[Math.floor(Math.random()*heartGlyphs.length)];
 
 heart.style.left=Math.random()*100+"vw";
 heart.style.fontSize=(15+Math.random()*30)+"px";
@@ -79,6 +81,24 @@ setTimeout(()=>heart.remove(),1000);
 
 }
 
+/* ---- scroll reveal (shared) ---- */
+
+function observeReveal(elements,stagger){
+const observer=new IntersectionObserver((entries)=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){
+entry.target.classList.add("in-view");
+observer.unobserve(entry.target);
+}
+});
+},{threshold:0.2});
+
+elements.forEach((el,i)=>{
+if(stagger) el.style.transitionDelay=(i*0.08)+"s";
+observer.observe(el);
+});
+}
+
 /* ---- timeline ---- */
 
 function renderTimeline(){
@@ -95,16 +115,7 @@ el.innerHTML=
 container.appendChild(el);
 });
 
-const items=container.querySelectorAll(".timeline-item");
-const observer=new IntersectionObserver((entries)=>{
-entries.forEach(entry=>{
-if(entry.isIntersecting){
-entry.target.classList.add("in-view");
-}
-});
-},{threshold:0.2});
-
-items.forEach(item=>observer.observe(item));
+observeReveal(container.querySelectorAll(".timeline-item"),true);
 }
 
 /* ---- gallery ---- */
@@ -126,6 +137,8 @@ img.onclick=()=>openLightbox(item.src,item.caption);
 wrap.appendChild(img);
 container.appendChild(wrap);
 });
+
+observeReveal(container.querySelectorAll(".gallery-item"),true);
 }
 
 function openLightbox(src,caption){
@@ -163,6 +176,8 @@ card.classList.toggle("flipped");
 });
 container.appendChild(card);
 });
+
+observeReveal(container.querySelectorAll(".letter-card"),true);
 }
 
 /* ---- quiz ---- */
@@ -217,7 +232,15 @@ if(idx===q.correctIndex) btn.classList.add("correct");
 else if(idx===i) btn.classList.add("wrong");
 });
 
-if(i===q.correctIndex) quizScore++;
+if(i===q.correctIndex){
+quizScore++;
+const rect=container.getBoundingClientRect();
+for(let n=0;n<6;n++){
+setTimeout(()=>{
+spawnClickHeart(rect.left+rect.width*Math.random(),rect.top+20);
+},n*80);
+}
+}
 
 if(q.funFact){
 const fact=document.createElement("p");
@@ -258,6 +281,7 @@ renderGallery();
 renderLetters();
 renderQuiz();
 attachHoverSparkle();
+observeReveal(document.querySelectorAll(".section"),false);
 
 const lightbox=document.getElementById("lightbox");
 if(lightbox){
