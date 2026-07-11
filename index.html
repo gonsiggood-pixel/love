@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>For My Love ❤️</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<section class="hero">
 <div class="card">
 
 <h1>Hi My Love ❤️</h1>
@@ -33,7 +35,31 @@ allowfullscreen=""
 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
 </iframe>
 </div>
+</section>
 
+<section class="section" id="timeline-section">
+<h2>Our Story</h2>
+<div class="timeline" id="timeline"></div>
+</section>
+
+<section class="section" id="gallery-section">
+<h2>Our Memories</h2>
+<div class="gallery-grid" id="gallery"></div>
+</section>
+
+<div class="lightbox" id="lightbox" hidden></div>
+
+<section class="section" id="letters-section">
+<h2>Love Letters</h2>
+<div class="letters-grid" id="letters"></div>
+</section>
+
+<section class="section" id="quiz-section">
+<h2>How Well Do You Know Us?</h2>
+<div id="quiz"></div>
+</section>
+
+<script src="data.js"></script>
 <script src="script.js"></script>
 
 </body>
