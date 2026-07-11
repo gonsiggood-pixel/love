@@ -167,17 +167,32 @@ lettersData.forEach(item=>{
 const card=document.createElement("div");
 card.className="letter-card";
 card.innerHTML=
-"<div class=\"letter-inner\">"+
-"<div class=\"letter-front\">💌<br>"+item.title+"</div>"+
-"<div class=\"letter-back\">"+item.body+"</div>"+
-"</div>";
-card.addEventListener("click",()=>{
-card.classList.toggle("flipped");
-});
+"<div class=\"letter-icon\">💌</div>"+
+"<div>"+item.title+"</div>";
+card.addEventListener("click",()=>openLetter(item));
 container.appendChild(card);
 });
 
 observeReveal(container.querySelectorAll(".letter-card"),true);
+}
+
+function openLetter(item){
+const overlay=document.getElementById("letter-overlay");
+const paper=document.getElementById("letter-paper");
+if(!overlay||!paper) return;
+
+paper.innerHTML=
+"<h3>"+item.title+"</h3>"+
+"<p>"+item.body+"</p>"+
+"<button onclick=\"closeLetter()\">Close</button>";
+
+overlay.classList.add("open");
+}
+
+function closeLetter(){
+const overlay=document.getElementById("letter-overlay");
+if(!overlay) return;
+overlay.classList.remove("open");
 }
 
 /* ---- quiz ---- */
@@ -286,5 +301,12 @@ observeReveal(document.querySelectorAll(".section"),false);
 const lightbox=document.getElementById("lightbox");
 if(lightbox){
 lightbox.addEventListener("click",closeLightbox);
+}
+
+const letterOverlay=document.getElementById("letter-overlay");
+if(letterOverlay){
+letterOverlay.addEventListener("click",(e)=>{
+if(e.target===letterOverlay) closeLetter();
+});
 }
 });
