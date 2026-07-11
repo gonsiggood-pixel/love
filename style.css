@@ -1,0 +1,55 @@
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+color:white;
+overflow:hidden;
+}
+
+.card{
+background:rgba(255,255,255,0.2);
+padding:40px;
+border-radius:20px;
+backdrop-filter:blur(10px);
+width:380px;
+z-index:10;
+}
+
+#counter{
+font-size:20px;
+margin:20px 0;
+}
+
+button{
+padding:12px 20px;
+border:none;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+}
+
+/* hearts */
+
+.heart{
+position:absolute;
+bottom:-20px;
+animation:floatUp linear infinite;
+}
+
+@keyframes floatUp{
+from{transform:translateY(0);opacity:1;}
+to{transform:translateY(-110vh);opacity:0;}
+}
+
+/* photo */
+
+.photo{
+width:100%;
+border-radius:15px;
+margin-top:15px;
+}
