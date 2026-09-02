@@ -3,29 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>For My Love ❤️</title>
+<title>Love Maze ❤️</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<section class="hero">
+<div class="screen intro-screen" id="intro">
 <div class="card">
+<h1>Find Your Way To Me 💕</h1>
+<p>I hid a little maze for you. Walk through it, collect the hearts along the way, and see what's waiting at the end.</p>
+<button onclick="startGame()">Start ▶</button>
+</div>
+</div>
 
-<h1>Hi My Love ❤️</h1>
+<div class="screen game-screen" id="game" hidden>
+<div class="hud">
+<span id="heart-count">0 💖</span>
+</div>
+<div class="maze" id="maze"></div>
+<div class="dpad">
+<button class="dpad-btn up" onclick="tryMove(0,-1)">▲</button>
+<div class="dpad-row">
+<button class="dpad-btn left" onclick="tryMove(-1,0)">◀</button>
+<button class="dpad-btn right" onclick="tryMove(1,0)">▶</button>
+</div>
+<button class="dpad-btn down" onclick="tryMove(0,1)">▼</button>
+</div>
+</div>
 
+<div class="letter-overlay" id="letter-overlay">
+<div class="letter-paper" id="letter-paper"></div>
+</div>
+
+<div class="screen finale-screen" id="finale" hidden>
+<div class="card">
+<h1>You Found Me! ❤️</h1>
 <p>Since we met on <b>30 Dec 2025</b></p>
-
 <div id="counter"></div>
-
-<button onclick="showMessage()">Love message 💌</button>
-
-<p id="msg"></p>
-
 <img src="photo.jpg" class="photo">
-
+<p id="finale-msg"></p>
+<button onclick="showFinaleMessage()">Another love message 💌</button>
 <p>Our song ❤️</p>
-
 <iframe style="border-radius:12px"
 src="https://open.spotify.com/embed/track/0tgVpDi06FyKpA1z0VMD4v"
 width="100%"
@@ -35,35 +54,7 @@ allowfullscreen=""
 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
 </iframe>
 </div>
-
-<div class="scroll-cue">Scroll for our story ↓</div>
-</section>
-
-<section class="section" id="timeline-section">
-<h2>Our Story</h2>
-<div class="timeline" id="timeline"></div>
-</section>
-
-<section class="section" id="gallery-section">
-<h2>Our Memories</h2>
-<div class="gallery-grid" id="gallery"></div>
-</section>
-
-<div class="lightbox" id="lightbox" hidden></div>
-
-<section class="section" id="letters-section">
-<h2>Love Letters</h2>
-<div class="letters-grid" id="letters"></div>
-</section>
-
-<div class="letter-overlay" id="letter-overlay">
-<div class="letter-paper" id="letter-paper"></div>
 </div>
-
-<section class="section" id="quiz-section">
-<h2>How Well Do You Know Us?</h2>
-<div id="quiz"></div>
-</section>
 
 <script src="data.js"></script>
 <script src="script.js"></script>

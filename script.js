@@ -1,4 +1,4 @@
-/* counter */
+/* counter (shown on the finale card) */
 
 const startDate = new Date("2025-12-30T00:00:00");
 
@@ -12,7 +12,10 @@ const minutes = Math.floor(diff/1000/60)%60;
 const hours = Math.floor(diff/1000/60/60)%24;
 const days = Math.floor(diff/1000/60/60/24);
 
-document.getElementById("counter").innerHTML =
+const el=document.getElementById("counter");
+if(!el) return;
+
+el.innerHTML =
 days+" days "+
 hours+" hours "+
 minutes+" minutes "+
@@ -23,17 +26,7 @@ seconds+" seconds ❤️";
 setInterval(updateCounter,1000);
 updateCounter();
 
-/* messages */
-
-function showMessage(){
-
-const msg=messagesData[Math.floor(Math.random()*messagesData.length)];
-
-document.getElementById("msg").innerHTML=msg;
-
-}
-
-/* floating hearts */
+/* ambient floating hearts */
 
 const heartGlyphs=["❤️","💕","💖","💗","🌸"];
 
@@ -58,7 +51,7 @@ heart.remove();
 
 setInterval(createHeart,300);
 
-/* click hearts */
+/* click sparkle hearts */
 
 document.addEventListener("click",(e)=>{
 spawnClickHeart(e.clientX,e.clientY);
@@ -73,7 +66,7 @@ heart.style.left=x+"px";
 heart.style.top=y+"px";
 heart.style.fontSize="30px";
 heart.style.pointerEvents="none";
-heart.style.zIndex="20";
+heart.style.zIndex="80";
 
 document.body.appendChild(heart);
 
@@ -81,110 +74,340 @@ setTimeout(()=>heart.remove(),1000);
 
 }
 
-/* ---- scroll reveal (shared) ---- */
+/* ---- maze generation (deterministic recursive backtracker — no Math.random, always solvable) ---- */
 
-function observeReveal(elements,stagger){
-const observer=new IntersectionObserver((entries)=>{
-entries.forEach(entry=>{
-if(entry.isIntersecting){
-entry.target.classList.add("in-view");
-observer.unobserve(entry.target);
+const MAZE_ROWS=9, MAZE_COLS=9;
+const CELL_PX=30, WALL_PX=8;
+
+function generateMaze(rows,cols){
+
+const cells=[];
+for(let r=0;r<rows;r++){
+const row=[];
+for(let c=0;c<cols;c++){
+row.push({r,c,visited:false,N:true,E:true,S:true,W:true});
 }
+cells.push(row);
+}
+
+const dirs=[
+{dr:-1,dc:0,me:"N",opp:"S"},
+{dr:0,dc:1,me:"E",opp:"W"},
+{dr:1,dc:0,me:"S",opp:"N"},
+{dr:0,dc:-1,me:"W",opp:"E"}
+];
+
+function neighborOrder(r,c){
+const shift=(r*3+c*5)%4;
+return dirs.slice(shift).concat(dirs.slice(0,shift));
+}
+
+const stack=[cells[0][0]];
+cells[0][0].visited=true;
+
+while(stack.length){
+const cur=stack[stack.length-1];
+const order=neighborOrder(cur.r,cur.c);
+let moved=false;
+
+for(const d of order){
+const nr=cur.r+d.dr, nc=cur.c+d.dc;
+if(nr<0||nr>=rows||nc<0||nc>=cols) continue;
+const next=cells[nr][nc];
+if(next.visited) continue;
+
+cur[d.me]=false;
+next[d.opp]=false;
+next.visited=true;
+stack.push(next);
+moved=true;
+break;
+}
+
+if(!moved) stack.pop();
+}
+
+return cells;
+
+}
+
+function findPath(cells,fromR,fromC,toR,toC){
+
+const key=(r,c)=>r+","+c;
+const visited=new Set([key(fromR,fromC)]);
+const parent={};
+const queue=[[fromR,fromC]];
+
+while(queue.length){
+const [r,c]=queue.shift();
+if(r===toR&&c===toC) break;
+const cell=cells[r][c];
+const moves=[];
+if(!cell.N) moves.push([r-1,c]);
+if(!cell.E) moves.push([r,c+1]);
+if(!cell.S) moves.push([r+1,c]);
+if(!cell.W) moves.push([r,c-1]);
+
+for(const [nr,nc] of moves){
+const k=key(nr,nc);
+if(visited.has(k)) continue;
+visited.add(k);
+parent[k]=key(r,c);
+queue.push([nr,nc]);
+}
+}
+
+const path=[];
+let cur=key(toR,toC);
+while(cur){
+const [r,c]=cur.split(",").map(Number);
+path.unshift({r,c});
+cur=parent[cur];
+}
+return path;
+
+}
+
+function farthestCell(cells,fromR,fromC){
+
+const key=(r,c)=>r+","+c;
+const dist={};
+dist[key(fromR,fromC)]=0;
+const queue=[[fromR,fromC]];
+let best={r:fromR,c:fromC,d:0};
+
+while(queue.length){
+const [r,c]=queue.shift();
+const cell=cells[r][c];
+const moves=[];
+if(!cell.N) moves.push([r-1,c]);
+if(!cell.E) moves.push([r,c+1]);
+if(!cell.S) moves.push([r+1,c]);
+if(!cell.W) moves.push([r,c-1]);
+
+for(const [nr,nc] of moves){
+const k=key(nr,nc);
+if(k in dist) continue;
+dist[k]=dist[key(r,c)]+1;
+if(dist[k]>best.d) best={r:nr,c:nc,d:dist[k]};
+queue.push([nr,nc]);
+}
+}
+
+return best;
+
+}
+
+function pickHeartCells(path,count){
+const inner=path.slice(1,-1);
+if(inner.length<=count) return inner;
+
+const step=inner.length/(count+1);
+const picks=[];
+for(let i=1;i<=count;i++){
+picks.push(inner[Math.floor(i*step)]);
+}
+return picks;
+}
+
+function buildRevealPool(){
+const pool=[];
+timelineData.forEach(t=>pool.push({type:"text",icon:"📅",title:t.title,body:t.text}));
+lettersData.forEach(l=>pool.push({type:"text",icon:"💌",title:l.title,body:l.body}));
+galleryData.slice(0,2).forEach(g=>pool.push({type:"photo",icon:"📷",title:g.caption||"A memory",src:g.src}));
+return pool;
+}
+
+/* ---- game state ---- */
+
+let cellsRef=null;
+let player={r:0,c:0};
+let heartCells=[];
+let collectedCount=0;
+let controlsReady=false;
+let exitR=0, exitC=0;
+
+function startGame(){
+
+document.getElementById("intro").hidden=true;
+document.getElementById("game").hidden=false;
+
+cellsRef=generateMaze(MAZE_ROWS,MAZE_COLS);
+const exit=farthestCell(cellsRef,0,0);
+exitR=exit.r;
+exitC=exit.c;
+const path=findPath(cellsRef,0,0,exitR,exitC);
+const pool=buildRevealPool();
+const heartCount=Math.min(6,pool.length,path.length-2);
+const picks=pickHeartCells(path,heartCount);
+
+heartCells=picks.map((p,i)=>({r:p.r,c:p.c,collected:false,reveal:pool[i]}));
+collectedCount=0;
+player={r:0,c:0};
+
+renderMaze();
+renderHearts();
+placePlayer(true);
+updateHud();
+attachControls();
+
+}
+
+function renderMaze(){
+
+const maze=document.getElementById("maze");
+maze.innerHTML="";
+
+const colTemplate=[];
+const rowTemplate=[];
+for(let c=0;c<MAZE_COLS;c++){
+colTemplate.push(CELL_PX+"px");
+if(c<MAZE_COLS-1) colTemplate.push(WALL_PX+"px");
+}
+for(let r=0;r<MAZE_ROWS;r++){
+rowTemplate.push(CELL_PX+"px");
+if(r<MAZE_ROWS-1) rowTemplate.push(WALL_PX+"px");
+}
+maze.style.gridTemplateColumns=colTemplate.join(" ");
+maze.style.gridTemplateRows=rowTemplate.join(" ");
+
+for(let r=0;r<MAZE_ROWS;r++){
+for(let c=0;c<MAZE_COLS;c++){
+
+const block=document.createElement("div");
+block.className="cell-block";
+block.id="cell-"+r+"-"+c;
+block.style.gridColumn=(c*2+1);
+block.style.gridRow=(r*2+1);
+maze.appendChild(block);
+
+if(c<MAZE_COLS-1){
+const conn=document.createElement("div");
+conn.className="wall-block "+(cellsRef[r][c].E?"closed":"open");
+conn.style.gridColumn=(c*2+2);
+conn.style.gridRow=(r*2+1);
+maze.appendChild(conn);
+}
+
+if(r<MAZE_ROWS-1){
+const conn=document.createElement("div");
+conn.className="wall-block "+(cellsRef[r][c].S?"closed":"open");
+conn.style.gridColumn=(c*2+1);
+conn.style.gridRow=(r*2+2);
+maze.appendChild(conn);
+}
+
+if(c<MAZE_COLS-1&&r<MAZE_ROWS-1){
+const pillar=document.createElement("div");
+pillar.className="pillar-block";
+pillar.style.gridColumn=(c*2+2);
+pillar.style.gridRow=(r*2+2);
+maze.appendChild(pillar);
+}
+
+}
+}
+
+const exit=document.getElementById("cell-"+exitR+"-"+exitC);
+const exitIcon=document.createElement("div");
+exitIcon.className="exit-icon";
+exitIcon.textContent="💝";
+exit.appendChild(exitIcon);
+
+}
+
+function renderHearts(){
+heartCells.forEach(h=>{
+const block=document.getElementById("cell-"+h.r+"-"+h.c);
+if(!block) return;
+const icon=document.createElement("div");
+icon.className="heart-icon";
+icon.textContent="💖";
+block.appendChild(icon);
 });
-},{threshold:0.2});
-
-elements.forEach((el,i)=>{
-if(stagger) el.style.transitionDelay=(i*0.08)+"s";
-observer.observe(el);
-});
 }
 
-/* ---- timeline ---- */
+function placePlayer(skipHop){
+let marker=document.getElementById("player-marker");
+if(!marker){
+marker=document.createElement("div");
+marker.id="player-marker";
+marker.className="player-marker";
+marker.textContent="🐻";
+document.getElementById("maze").appendChild(marker);
+}
+marker.style.gridColumn=(player.c*2+1);
+marker.style.gridRow=(player.r*2+1);
 
-function renderTimeline(){
-const container=document.getElementById("timeline");
-if(!container) return;
+void marker.offsetWidth;
 
-timelineData.forEach(item=>{
-const el=document.createElement("div");
-el.className="timeline-item";
-el.innerHTML=
-"<div class=\"timeline-date\">"+item.date+"</div>"+
-"<div class=\"timeline-title\">"+item.title+"</div>"+
-"<div class=\"timeline-text\">"+item.text+"</div>";
-container.appendChild(el);
-});
-
-observeReveal(container.querySelectorAll(".timeline-item"),true);
+if(!skipHop){
+marker.classList.remove("hop");
+void marker.offsetWidth;
+marker.classList.add("hop");
+}
 }
 
-/* ---- gallery ---- */
-
-function renderGallery(){
-const container=document.getElementById("gallery");
-if(!container) return;
-
-galleryData.forEach(item=>{
-const wrap=document.createElement("div");
-wrap.className="gallery-item";
-
-const img=document.createElement("img");
-img.src=item.src;
-img.alt=item.caption||"";
-img.onerror=()=>{ wrap.remove(); };
-img.onclick=()=>openLightbox(item.src,item.caption);
-
-wrap.appendChild(img);
-container.appendChild(wrap);
-});
-
-observeReveal(container.querySelectorAll(".gallery-item"),true);
+function updateHud(){
+document.getElementById("heart-count").textContent=collectedCount+" / "+heartCells.length+" 💖";
 }
 
-function openLightbox(src,caption){
-const lightbox=document.getElementById("lightbox");
-if(!lightbox) return;
-lightbox.innerHTML=
-"<img src=\""+src+"\">"+
-(caption?"<p>"+caption+"</p>":"");
-lightbox.hidden=false;
+function tryMove(dc,dr){
+if(!cellsRef) return;
+const cell=cellsRef[player.r][player.c];
+let can=false;
+
+if(dr===-1&&!cell.N) can=true;
+if(dr===1&&!cell.S) can=true;
+if(dc===1&&!cell.E) can=true;
+if(dc===-1&&!cell.W) can=true;
+
+if(!can) return;
+
+player.r+=dr;
+player.c+=dc;
+placePlayer(false);
+checkCell();
 }
 
-function closeLightbox(){
-const lightbox=document.getElementById("lightbox");
-if(!lightbox) return;
-lightbox.hidden=true;
-lightbox.innerHTML="";
+function checkCell(){
+
+const heart=heartCells.find(h=>h.r===player.r&&h.c===player.c&&!h.collected);
+if(heart){
+heart.collected=true;
+collectedCount++;
+updateHud();
+
+const block=document.getElementById("cell-"+heart.r+"-"+heart.c);
+const icon=block&&block.querySelector(".heart-icon");
+if(icon) icon.classList.add("collected");
+
+openPickup(heart.reveal);
+return;
 }
 
-/* ---- love letters ---- */
-
-function renderLetters(){
-const container=document.getElementById("letters");
-if(!container) return;
-
-lettersData.forEach(item=>{
-const card=document.createElement("div");
-card.className="letter-card";
-card.innerHTML=
-"<div class=\"letter-icon\">💌</div>"+
-"<div>"+item.title+"</div>";
-card.addEventListener("click",()=>openLetter(item));
-container.appendChild(card);
-});
-
-observeReveal(container.querySelectorAll(".letter-card"),true);
+if(player.r===exitR&&player.c===exitC){
+showFinale();
 }
 
-function openLetter(item){
+}
+
+function openPickup(reveal){
 const overlay=document.getElementById("letter-overlay");
 const paper=document.getElementById("letter-paper");
 if(!overlay||!paper) return;
 
+if(reveal.type==="photo"){
 paper.innerHTML=
-"<h3>"+item.title+"</h3>"+
-"<p>"+item.body+"</p>"+
-"<button onclick=\"closeLetter()\">Close</button>";
+"<h3>"+reveal.icon+" "+reveal.title+"</h3>"+
+"<img src=\""+reveal.src+"\" class=\"photo\">"+
+"<button onclick=\"closeLetter()\">Keep going ▶</button>";
+} else {
+paper.innerHTML=
+"<h3>"+reveal.icon+" "+reveal.title+"</h3>"+
+"<p>"+reveal.body+"</p>"+
+"<button onclick=\"closeLetter()\">Keep going ▶</button>";
+}
 
 overlay.classList.add("open");
 }
@@ -195,113 +418,61 @@ if(!overlay) return;
 overlay.classList.remove("open");
 }
 
-/* ---- quiz ---- */
+function showFinale(){
 
-let quizIndex=0;
-let quizScore=0;
+document.getElementById("game").hidden=true;
+document.getElementById("finale").hidden=false;
+showFinaleMessage();
 
-function renderQuiz(){
-const container=document.getElementById("quiz");
-if(!container) return;
-quizIndex=0;
-quizScore=0;
-showQuizQuestion();
-}
-
-function showQuizQuestion(){
-const container=document.getElementById("quiz");
-if(!container) return;
-
-if(quizIndex>=quizData.length){
-container.innerHTML=
-"<div class=\"quiz-question\">You scored "+quizScore+" / "+quizData.length+" ❤️</div>"+
-"<button onclick=\"renderQuiz()\">Play again</button>";
-return;
-}
-
-const q=quizData[quizIndex];
-container.innerHTML="";
-
-const qEl=document.createElement("div");
-qEl.className="quiz-question";
-qEl.textContent=q.question;
-container.appendChild(qEl);
-
-q.options.forEach((opt,i)=>{
-const btn=document.createElement("button");
-btn.className="quiz-option";
-btn.textContent=opt;
-btn.onclick=()=>answerQuiz(i);
-container.appendChild(btn);
-});
-}
-
-function answerQuiz(i){
-const q=quizData[quizIndex];
-const container=document.getElementById("quiz");
-const buttons=container.querySelectorAll(".quiz-option");
-
-buttons.forEach((btn,idx)=>{
-btn.disabled=true;
-if(idx===q.correctIndex) btn.classList.add("correct");
-else if(idx===i) btn.classList.add("wrong");
-});
-
-if(i===q.correctIndex){
-quizScore++;
-const rect=container.getBoundingClientRect();
-for(let n=0;n<6;n++){
+for(let n=0;n<16;n++){
 setTimeout(()=>{
-spawnClickHeart(rect.left+rect.width*Math.random(),rect.top+20);
-},n*80);
-}
-}
-
-if(q.funFact){
-const fact=document.createElement("p");
-fact.className="quiz-fact";
-fact.textContent=q.funFact;
-container.appendChild(fact);
+spawnClickHeart(window.innerWidth*Math.random(),window.innerHeight*0.3);
+},n*90);
 }
 
-const next=document.createElement("button");
-next.textContent=(quizIndex===quizData.length-1)?"See score":"Next";
-next.onclick=()=>{
-quizIndex++;
-showQuizQuestion();
-};
-container.appendChild(next);
 }
 
-/* ---- hover sparkle on new interactive elements ---- */
+function showFinaleMessage(){
+const msg=messagesData[Math.floor(Math.random()*messagesData.length)];
+document.getElementById("finale-msg").textContent=msg;
+}
 
-function attachHoverSparkle(){
-document.querySelectorAll(".timeline-item,.gallery-item,.letter-card").forEach(el=>{
-let last=0;
-el.addEventListener("mouseenter",(e)=>{
-const now=Date.now();
-if(now-last<1500) return;
-last=now;
-const rect=el.getBoundingClientRect();
-spawnClickHeart(rect.left+rect.width/2,rect.top+rect.height/2);
+/* ---- controls: keyboard + swipe + on-screen dpad (dpad buttons call tryMove() via inline onclick) ---- */
+
+function attachControls(){
+if(controlsReady) return;
+controlsReady=true;
+
+document.addEventListener("keydown",(e)=>{
+if(document.getElementById("game").hidden) return;
+if(e.key==="ArrowUp") tryMove(0,-1);
+else if(e.key==="ArrowDown") tryMove(0,1);
+else if(e.key==="ArrowLeft") tryMove(-1,0);
+else if(e.key==="ArrowRight") tryMove(1,0);
 });
-});
+
+const maze=document.getElementById("maze");
+let touchStartX=0, touchStartY=0;
+
+maze.addEventListener("touchstart",(e)=>{
+touchStartX=e.touches[0].clientX;
+touchStartY=e.touches[0].clientY;
+},{passive:true});
+
+maze.addEventListener("touchend",(e)=>{
+const dx=e.changedTouches[0].clientX-touchStartX;
+const dy=e.changedTouches[0].clientY-touchStartY;
+if(Math.abs(dx)<20&&Math.abs(dy)<20) return;
+
+if(Math.abs(dx)>Math.abs(dy)) tryMove(dx>0?1:-1,0);
+else tryMove(0,dy>0?1:-1);
+},{passive:true});
+
 }
 
 /* ---- init ---- */
 
 document.addEventListener("DOMContentLoaded",()=>{
-renderTimeline();
-renderGallery();
-renderLetters();
-renderQuiz();
-attachHoverSparkle();
-observeReveal(document.querySelectorAll(".section"),false);
-
-const lightbox=document.getElementById("lightbox");
-if(lightbox){
-lightbox.addEventListener("click",closeLightbox);
-}
 
 const letterOverlay=document.getElementById("letter-overlay");
 if(letterOverlay){
@@ -309,4 +480,5 @@ letterOverlay.addEventListener("click",(e)=>{
 if(e.target===letterOverlay) closeLetter();
 });
 }
+
 });
